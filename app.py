@@ -1,6 +1,6 @@
 import json
 import urllib3
-import re
+import os
 
 from flask import Flask, jsonify, make_response, request
 
@@ -8,14 +8,14 @@ app = Flask(__name__)
 
 
 @app.route('/', methods=['POST'])
-def webhook():
+def status():
     req = request.get_json(silent=True, force=True)
     action = req.get('result').get('action')
 
     if action == 'get_line_status':
         try:
             line = req['result']['parameters'].get('line')
-            disruptions = get_status(line)
+            disruptions = get_disruptions(line)
             descriptions = {disruption['description'] for disruption in disruptions}
             if len(disruptions):
                 output = "".join(item for item in descriptions)
@@ -27,13 +27,18 @@ def webhook():
         # Compose the response to API.AI
         res = {'speech': output, 'displayText': output}
 
-    return make_response(jsonify(res))
+        return make_response(jsonify(res))
 
 
-def get_status(line):
+
+def get_disruptions(line):
     request = urllib3.PoolManager()
-    url = "https://api.tfl.gov.uk/Line/{}/Disruption/".format(
-        line)  # '?api_id={}&app_key={}".format(line, "fe639503", "d99f264b6f65f3ff5920c8b4576d138c")
+    args = [line]
+    url = "https://api.tfl.gov.uk/Line/{}/Disruption/"
+    if(os.environ.get('APP_ID')):
+        url += "?app_id={}&app_key={}"
+        args += [os.environ.get('APP_ID'), os.environ.get('API_KEY')]
+    url = url.format(*args)
     response = request.request('GET', url)
     data = response.data.decode('UTF-8')
     return json.loads(data)

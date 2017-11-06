@@ -20,7 +20,7 @@ def webhook():
             if len(disruptions):
                 output = "".join(item for item in descriptions)
             else:
-                output = "line " + line + " has no disruptions"
+                output = line + " line has no disruptions"
         except Exception as ex:
             output = str(ex)
 

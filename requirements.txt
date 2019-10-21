@@ -1,4 +1,4 @@
-Flask==0.12.1
+Flask==1.0
 Beaker==1.9.0
 urllib3==1.20
 gunicorn
